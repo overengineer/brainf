@@ -4,7 +4,6 @@ There are decimal and ascii modes.
 Both tape and cells are circular.
 Cells are 8 bit.
 */
-#include "stdafx.h"
 #include <stdio.h>
 #include <conio.h>
 #include <cstdlib>
