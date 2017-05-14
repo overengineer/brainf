@@ -4,6 +4,7 @@ There are decimal and ascii modes.
 Both tape and cells are circular.
 Cells are 8 bit.
 */
+#include "stdafx.h"
 #include <stdio.h>
 #include <conio.h>
 #include <cstdlib>
@@ -31,13 +32,14 @@ int main(void)
 	FILE* stream;
 	char path[100];
 	size_t fsize;
-	char c;
+	bool c;
 	while (1) {
 		//add ascii and decimal modes
 		puts("\ndecimal mode(0) or ascii mode(1)?:");
-		bf.setmode(_getch());
+		scanf_s("%d",(int*)&c);
+		bf.setmode(c);
 		puts("\nread from file(0) or write on console(1)?:");
-		c = _getch();
+		scanf_s("%d", (int*)&c);
 		puts("enter max script size:");
 		if (!scanf_s("%d", &fsize)) {
 			fprintf(stderr, "function: %s \t message: fscanf_s error\n", __FUNCTION__);
@@ -65,7 +67,7 @@ int main(void)
 			break;
 		}
 		bf.print();
-		if (c == 0) {
+		if (!c) {
 			fclose(stream);
 		}
 	}
