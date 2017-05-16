@@ -34,7 +34,7 @@ int main(void)
 	bool c;
 	while (1) {
 		//add ascii and decimal modes
-		puts("\ndecimal mode(0) or ascii mode(1)?:");
+		puts("\nascii mode(0) or decimal mode(1)?:");
 		scanf_s("%d",(int*)&c);
 		bf.setmode(c);
 		puts("\nread from file(0) or write on console(1)?:");
