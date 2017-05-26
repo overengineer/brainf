@@ -1,7 +1,6 @@
 /*
 Brainf**k interpreter by Alper Said Soylu
 There are decimal and ascii modes.
-Both tape and cells are circular.
 Cells are 8 bit.
 */
 #include <stdio.h>
