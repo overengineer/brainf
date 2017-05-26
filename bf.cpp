@@ -12,65 +12,96 @@ Cells are 8 bit.
 class Bf {
 public:
 	Bf();
-	int inputf(FILE* stream, size_t fsize);
-	int execute(int tapesize);
+	int inputf(FILE* bf_sstream, size_t fsize);
+	int execute(FILE* bf_istream,size_t tapesize);
 	void print();
 	void setmode(bool m);
 	~Bf();
 private:
 	bool d;
+	bool f;
 	char* script;
-	int script_end;
-	int tape_end;
+	size_t script_end;
+	size_t tape_end;
 	unsigned char* tape;
 };
 
 int main(void)
 {
 	Bf bf;
-	FILE* stream;
+	FILE* bf_sstream;
+	FILE* bf_istream;
 	char path[100];
-	size_t fsize;
-	bool c;
+	size_t fsize,tsize;
+	bool d,c,f;
 	while (1) {
 		//add ascii and decimal modes
 		puts("\nascii mode(0) or decimal mode(1)?:");
-		scanf_s("%d",(int*)&c);
-		bf.setmode(c);
-		puts("\nread from file(0) or write on console(1)?:");
+		scanf_s("%d",(int*)&d);
+		bf.setmode(d);
+		puts("\nread source code from file(0) or write on console(1)?:");
 		scanf_s("%d", (int*)&c);
+		puts("\nget input from stdin(0) or file(1)?:");
+		scanf_s("%d", (int*)&f);
 		puts("enter max script size:");
 		if (!scanf_s("%d", &fsize)) {
-			fprintf(stderr, "function: %s \t message: fscanf_s error\n", __FUNCTION__);
+			fprintf(stderr, "function: %s \t message: scanf_s error\n", __FUNCTION__);
 			break;
+		}
+		puts("enter tape size:");
+		if (!scanf_s("%d", &tsize)) {
+			fprintf(stderr, "function: %s \t message: scanf_s error\n", __FUNCTION__);
+			break;
+		}
+		if (f) {
+			puts("enter bf input stream directory:");
+			if (!scanf_s("%s", path, 100)) {
+				fprintf(stderr, "function: %s \t message: scanf_s error\n", __FUNCTION__);
+				break;
+			}
+			if (fopen_s(&bf_istream, path, "r")) {
+				fprintf(stderr, "function: %s \t message: fopen_s error: directory: %s\n", __FUNCTION__, path);
+				break;
+
+			}
+		}
+		else {
+			puts("bf input stream redirected to stdin");
+			bf_istream = stdin;
 		}
 		if (c) {
 			puts("enter your code:");
-			stream = stdin;
+			bf_sstream = stdin;
 		}
 		else {
-			puts("enter file directory:");
+			puts("enter bf source code file directory:");
 			if (!scanf_s("%s", path,100)) {
-				fprintf(stderr, "function: %s \t message: fscanf_s error\n", __FUNCTION__);
+				fprintf(stderr, "function: %s \t message: scanf_s error\n", __FUNCTION__);
 				break;
 			}
-			if (fopen_s(&stream, path, "r")) {
-				fprintf(stderr, "function: %s \t message: fopen_s error\n", __FUNCTION__);
+			if (fopen_s(&bf_sstream, path, "r")) {
+				fprintf(stderr, "function: %s \t message: fopen_s error: directory: %s\n", __FUNCTION__,path);
 				break;
 			}
 		}
-		if (bf.inputf(stream,fsize)) {
+		
+		if (bf.inputf(bf_sstream,fsize)) {
 			break;
 		}
-		if(bf.execute(100000)) {
+		if(bf.execute(bf_istream,tsize)) {
 			break;
 		}
 		bf.print();
 		if (!c) {
-			fclose(stream);
+			fclose(bf_sstream);
+		}
+		if (f) {
+			fclose(bf_istream);
 		}
 	}
-	perror("error message"); system("PAUSE");return -1;
+	perror("error message"); 
+	_getch();
+	return -1;
 }
 
 Bf::Bf() {
@@ -88,26 +119,27 @@ Bf::~Bf() {
 
 void Bf::print()
 {
-	if (d) {
+	puts("\ntape:");
+	/*if (d) {*/
 		unsigned char* tptr;
-		for (tptr = tape;tptr != &tape[tape_end] && (*tptr);printf("%d ", (*tptr)), tptr++);
+		for (tptr = tape;tptr != &tape[tape_end] && (*tptr);printf("%d ", (*tptr)), tptr++);/*
 	}
 	else {
-		printf("\n%s\n\n", tape);
-	}
+		printf("%s\n\n", tape);
+	}*/
 }
 void Bf::setmode(bool  m) {
 	d = m;
 }
 
-int Bf::inputf(FILE* stream, size_t fsize)
+int Bf::inputf(FILE* bf_sstream, size_t fsize)
 {
 	int i;
 	if (fsize == 0) {
 		fprintf(stderr, "function: %s \t message: zero value assigned to argument fsize\n", __FUNCTION__);
 		return -1;
 	}
-	if (stream == NULL) {
+	if (bf_sstream == NULL) {
 		fprintf(stderr, "function: %s \t message:  null pointer assigned to argument stream\n", __FUNCTION__);
 		return -1;
 	}
@@ -121,8 +153,8 @@ int Bf::inputf(FILE* stream, size_t fsize)
 		fprintf(stderr, "function: %s \t message: couldnt allocate memory\n", __FUNCTION__);
 		return -1;
 	}
-	if (!fscanf_s(stream,"%s",script, scriptsize)) {
-		fprintf(stderr, "function: %s \t message: fscanf_s error\n", __FUNCTION__);
+	if (!fscanf_s(bf_sstream,"%s",script, scriptsize)) {
+		fprintf(stderr, "function: %s \t message: fscanf_s error \n", __FUNCTION__);
 		return -1;
 	}
 	for (i = 0;script[i] != '\0';i++);
@@ -130,10 +162,10 @@ int Bf::inputf(FILE* stream, size_t fsize)
 	return 0;
 }
 
-int Bf::execute(int tapesize)
+int Bf::execute(FILE* bf_istream, size_t tsize)
 {
-	tape_end = tapesize;
-	if (tapesize == 0) {
+	tape_end = tsize;
+	if (tsize == 0) {
 		fprintf(stderr, "function: %s \t message: zero value assigned to argument tapesize\n", __FUNCTION__);
 		return -1;
 	}
@@ -148,12 +180,13 @@ int Bf::execute(int tapesize)
 		free(tape);
 		tape = NULL;
 	}
-	tape = (unsigned char*)malloc(sizeof(unsigned char)*(tapesize + 1));
+	tape = (unsigned char*)malloc(sizeof(unsigned char)*(tsize + 1));
 	if (tape == NULL) {
 		fprintf(stderr, "function: %s \t message: couldnt allocate memory\n", __FUNCTION__);
 		return -1;
 	}
-	for (i = 0;i<tapesize;i++) {
+
+	for (i = 0;i<tsize;i++) {
 		tape[i] = 0;
 	};
 	tape[i] = '\0';
@@ -170,10 +203,18 @@ int Bf::execute(int tapesize)
 		case ',':
 			printf("\nenter input: \t");
 			if (d) {
-				scanf_s("%d", (int*)tptr);
+				if (!fscanf_s(bf_istream,"%d", (int*)tptr)) {
+					fprintf(stderr, "function: %s, script offset: %d, message: scanf_s error\n", __FUNCTION__, sptr - script);
+					return -1;
+				}
 			}
 			else {
-				*tptr = _getch();
+				*tptr = fgetc(bf_istream);
+				_putch(*tptr);
+				if (*tptr == EOF) {
+					fprintf(stderr, "function: %s, script offset: %d, message: end of input file reached \n", __FUNCTION__, sptr - script);
+					return -1;
+				}
 			}
 			sptr++;
 			break;
@@ -189,6 +230,7 @@ int Bf::execute(int tapesize)
 		case '>':
 			if (tptr == tend){
 				tptr = tape;
+				fprintf(stderr, "function: %s, script offset: %d, message: tape access violation\n", __FUNCTION__,sptr-script);
 				return -1;
 			}
 			else{
@@ -199,6 +241,7 @@ int Bf::execute(int tapesize)
 		case '<':
 			if (tptr == tape) {
 				tptr = tend;
+				fprintf(stderr, "function: %s, script offset: %d, message: tape access violation\n", __FUNCTION__, sptr-script);
 				return -1;
 			}
 			else {
@@ -230,7 +273,7 @@ int Bf::execute(int tapesize)
 				while (bcount) {
 					sptr++;
 					if (*sptr == '\0') {
-						fprintf(stderr, "function: %s \t message: unbalanced brackets\n", __FUNCTION__);
+						fprintf(stderr, "function: %s, script offset: %d, message: unbalanced bracets\n", __FUNCTION__, sptr-script);
 						return -1;
 					}
 					if (*sptr == '[')
@@ -246,7 +289,7 @@ int Bf::execute(int tapesize)
 			while (bcount) {
 				sptr--;
 				if (sptr == script) {
-					fprintf(stderr, "function: %s \t message: unbalanced brackets\n", __FUNCTION__);
+					fprintf(stderr, "function: %s, script offset: %d, message: unbalanced bracets\n", __FUNCTION__, sptr-script);
 					return -1;
 				}
 				if (*sptr == '[')
